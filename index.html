@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1E3A8A" />
+  <title>حجوزاتك | منصة الحجوزات والخدمات الشاملة</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/png" href="./assets/icons/favicon.png" />
+  <link rel="apple-touch-icon" href="./assets/icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container nav-inner">
+      <div class="brand" onclick="navigateTo('home')">
+        <img src="./assets/logo.jpg" alt="شعار حجوزاتك" />
+        <div>
+          <span class="brand-title">حجوزاتك</span>
+          <span class="brand-sub">احجز موعدك بكل سهولة وأمان</span>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <button class="btn btn-outline btn-sm desktop-only" onclick="openAdminWhatsApp()">💬 أضف نشاطك</button>
+        <button class="btn btn-primary btn-sm" id="navLoginBtn" onclick="navigateTo('login')">🔐 دخول المشتركين</button>
+        <button class="btn btn-accent btn-sm hidden" id="navDashboardBtn" onclick="goToDashboard()">📋 لوحة التحكم</button>
+        <button class="btn btn-outline btn-sm hidden" id="navLogoutBtn" onclick="handleLogout()">خروج</button>
+        <button class="icon-btn" id="themeToggleBtn" onclick="toggleTheme()" title="تبديل المظهر">🌙</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- VIEW 1: HOME (PUBLIC MARKETPLACE) -->
+  <main id="view-home" class="view-section">
+    <section class="hero">
+      <div class="container hero-content">
+        <span class="hero-badge">✨ منصة واحدة تجمع كل الحرف والخدمات في مدينتك</span>
+        <h1>احجز موعدك مع أفضل الحرفيين ومقدمي الخدمات بكل سهولة</h1>
+        <p>تصفح التخصصات، اختر الموعد المناسب لك، وأكّد حجزك مجاناً في ثوانٍ معدودة دون انتظار.</p>
+      </div>
+    </section>
+
+    <div class="container">
+      <!-- Search Bar -->
+      <div class="search-bar">
+        <div class="search-field">
+          <span>🔍</span>
+          <input type="text" id="searchInput" placeholder="ابحث باسم الحرفي، الورشة، أو الخدمة..." oninput="applySearch()" />
+        </div>
+        <div class="search-field">
+          <span>🗂️</span>
+          <select id="filterCategory" onchange="applySearch()"></select>
+        </div>
+        <div class="search-field">
+          <span>📍</span>
+          <select id="filterCity" onchange="applySearch()"></select>
+        </div>
+        <button class="btn btn-primary" onclick="applySearch()">بحث</button>
+      </div>
+
+      <!-- Categories -->
+      <section class="section">
+        <div class="section-header">
+          <h2 class="section-title">🛠️ تصفح حسب الحرفة والتخصص</h2>
+          <button class="btn btn-outline btn-sm" onclick="resetFilters()">عرض الكل</button>
+        </div>
+        <div class="categories-grid" id="categoriesGrid"></div>
+      </section>
+
+      <!-- Providers List -->
+      <section class="section">
+        <div class="section-header">
+          <h2 class="section-title">⭐ مقدمو الخدمات المعتمدون <span id="providersCountLabel" style="font-size:0.95rem; color:var(--text-muted); font-weight:600;"></span></h2>
+        </div>
+        <div class="providers-grid" id="providersGrid"></div>
+      </section>
+
+      <!-- CTA Banner for Providers -->
+      <section class="section">
+        <div class="card" style="background: linear-gradient(135deg, var(--primary), var(--teal)); color:#fff; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
+          <div>
+            <h3 style="font-size:1.3rem; margin-bottom:4px;">هل لديك حرفة أو نشاط تجاري وتريد استقبال حجوزات العملاء؟</h3>
+            <p style="opacity:0.9; font-size:0.95rem;">انضم الآن إلى منصة حجوزاتك واحصل على صفحة خاصة ولوحة إدارة مواعيد متكاملة.</p>
+          </div>
+          <button class="btn" style="background:#fff; color:var(--primary); font-weight:800;" onclick="openAdminWhatsApp()">💬 تواصل مع الإدارة للاشتراك</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- VIEW 2: PROVIDER DETAIL & DIRECT BOOKING -->
+  <section id="view-provider-detail" class="view-section hidden">
+    <div class="container section" id="providerDetailContainer"></div>
+  </section>
+
+  <!-- VIEW 3: LOGIN ONLY (NO PUBLIC SIGNUP) -->
+  <section id="view-login" class="view-section hidden">
+    <div class="container section" style="max-width:460px; margin:30px auto;">
+      <div class="card">
+        <div style="text-align:center; margin-bottom:20px;">
+          <img src="./assets/logo.jpg" alt="حجوزاتك" style="width:68px; height:68px; border-radius:16px; margin-bottom:10px;" />
+          <h2>تسجيل دخول مقدمي الخدمات والإدارة</h2>
+          <p style="color:var(--text-muted); font-size:0.88rem;">أدخل بيانات الحساب المُسلَّمة لك من إدارة المنصة</p>
+        </div>
+
+        <form onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label>البريد الإلكتروني</label>
+            <input type="email" class="form-control" id="loginEmail" placeholder="example@hojoozatak.com" required />
+          </div>
+          <div class="form-group">
+            <label>كلمة المرور</label>
+            <input type="password" class="form-control" id="loginPassword" placeholder="••••••••" required />
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; padding:13px;">🔐 تسجيل الدخول</button>
+        </form>
+
+        <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border); text-align:center;">
+          <p style="font-size:0.86rem; color:var(--text-muted); margin-bottom:10px;">
+            ليس لديك حساب؟ إنشاء الحسابات متاح حصرياً عبر الإدارة بعد تفعيل الاشتراك.
+          </p>
+          <button class="btn btn-accent btn-sm" style="width:100%;" onclick="openAdminWhatsApp()">
+            💬 تواصل مع الإدارة عبر واتساب لفتح حساب
+          </button>
+        </div>
+
+        <!-- Quick Demo Credentials Hint -->
+        <div style="margin-top:16px; background:var(--surface-alt); padding:12px; border-radius:10px; font-size:0.78rem; color:var(--text-muted);">
+          <strong>بيانات تجريبية للاختبار الفوري:</strong><br/>
+          • <strong>الأدمن:</strong> admin@hojoozatak.com | <code>admin123</code><br/>
+          • <strong>حرفي:</strong> mahmoud@hojoozatak.com | <code>123456</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VIEW 4: PROVIDER DASHBOARD -->
+  <section id="view-provider-dashboard" class="view-section hidden">
+    <div class="container section" id="providerDashContainer"></div>
+  </section>
+
+  <!-- VIEW 5: SUPER ADMIN DASHBOARD -->
+  <section id="view-admin-dashboard" class="view-section hidden">
+    <div class="container section" id="adminDashContainer"></div>
+  </section>
+
+  <!-- MODAL: CREATE PROVIDER ACCOUNT (ADMIN ONLY) -->
+  <div class="modal-backdrop" id="createProviderModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>➕ إنشاء حساب مقدم خدمة جديد</h3>
+        <button class="icon-btn" onclick="closeModal('createProviderModal')">×</button>
+      </div>
+      <form onsubmit="createProviderAccount(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>اسم صاحب الحرفة</label>
+            <input type="text" class="form-control" id="newProvName" placeholder="مثال: خالد العتيبي" required />
+          </div>
+          <div class="form-group">
+            <label>اسم النشاط / الورشة</label>
+            <input type="text" class="form-control" id="newProvBusiness" placeholder="مثال: ورشة الإبداع" required />
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>الحرفة / التخصص</label>
+            <select class="form-control" id="newProvCategory" required></select>
+          </div>
+          <div class="form-group">
+            <label>المدينة</label>
+            <input type="text" class="form-control" id="newProvCity" placeholder="مثال: الرياض / القاهرة" required />
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>رقم الجوال / واتساب (بالكود الدولي)</label>
+            <input type="text" class="form-control" id="newProvPhone" placeholder="9665XXXXXXXX" required />
+          </div>
+          <div class="form-group">
+            <label>نوع الاشتراك المدفوع</label>
+            <select class="form-control" id="newProvPlan">
+              <option value="شهري">اشتراك شهري</option>
+              <option value="ربع سنوي">اشتراك 3 أشهر</option>
+              <option value="سنوي">اشتراك سنوي</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>البريد الإلكتروني للدخول</label>
+            <input type="email" class="form-control" id="newProvEmail" placeholder="user@hojoozatak.com" required />
+          </div>
+          <div class="form-group">
+            <label>كلمة المرور</label>
+            <div style="display:flex; gap:6px;">
+              <input type="text" class="form-control" id="newProvPassword" required />
+              <button type="button" class="btn btn-outline btn-sm" onclick="generateRandomPassword()">توليد</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>نبذة مختصرة عن الخدمات</label>
+          <textarea class="form-control" id="newProvBio" rows="2" placeholder="وصف مختصر يظهر للعملاء..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%; padding:13px;">✅ إنشاء وتفعيل الحساب الآن</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: BOOKING CONFIRMATION -->
+  <div class="modal-backdrop" id="bookingConfirmModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>تأكيد الحجز</h3>
+        <button class="icon-btn" onclick="closeModal('bookingConfirmModal')">×</button>
+      </div>
+      <div id="bookingConfirmBody"></div>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="bottom-nav">
+    <button data-nav="home" class="active" onclick="navigateTo('home')">
+      <span style="font-size:1.2rem;">🏠</span>
+      <span>الرئيسية</span>
+    </button>
+    <button onclick="openAdminWhatsApp()">
+      <span style="font-size:1.2rem;">💬</span>
+      <span>أضف نشاطك</span>
+    </button>
+    <button data-nav="login" onclick="goToDashboard()">
+      <span style="font-size:1.2rem;">🔐</span>
+      <span>حسابي / الإدارة</span>
+    </button>
+  </nav>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="./js/data.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>
