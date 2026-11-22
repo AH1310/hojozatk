@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>حجوزاتك | نظام الصفحات المستقلة و QR Code</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --teal: #14b8a6;
+      --accent: #10b981;
+      --danger: #ef4444;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-alt: #f1f5f9;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+    }
+    [data-theme="dark"] {
+      --bg: #070d19;
+      --surface: #111c33;
+      --surface-alt: #0b1324;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #233554;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
+    body { background: var(--bg); color: var(--text); line-height: 1.6; }
+    .container { max-width: 1080px; margin: 0 auto; padding: 24px 16px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 22px; box-shadow: 0 10px 28px rgba(0,0,0,0.12); }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-weight: 700; margin-bottom: 5px; font-size: 0.9rem; }
+    .form-control { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--surface-alt); color: var(--text); }
+    .btn { padding: 9px 15px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--teal)); color: #fff; }
+    .btn-accent { background: var(--accent); color: #fff; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+    .mode-switch { display: flex; gap: 8px; margin-bottom: 16px; }
+    .mode-btn { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-alt); color: var(--text); font-weight: 700; cursor: pointer; }
+    .mode-btn.active { background: linear-gradient(135deg, var(--primary), var(--teal)); color: #fff; border-color: transparent; }
+    .slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 8px; }
+    .slot-btn { padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-alt); color: var(--text); cursor: pointer; font-weight: 700; }
+    .slot-btn.selected { background: var(--teal); color: #fff; border-color: var(--teal); }
+    .slot-btn:disabled { opacity: 0.35; cursor: not-allowed; text-decoration: line-through; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 600px; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: right; font-size: 0.88rem; }
+    .badge { padding: 3px 10px; border-radius: 99px; font-size: 0.78rem; font-weight: 700; }
+    .badge-success { background: rgba(16,185,129,0.16); color: #10b981; }
+    .badge-danger { background: rgba(239,68,68,0.16); color: #f87171; }
+    .hidden { display: none !important; }
+    .toast { position: fixed; bottom: 20px; left: 20px; background: #0f172a; color: #fff; padding: 12px 18px; border-radius: 10px; z-index: 200; display: none; font-weight: 700; border-right: 4px solid var(--teal); }
+    .toast.show { display: block; }
+  </style>
+</head>
+<body>
+  <!-- بوابة أصحاب الخدمات والأدمن فقط (لا يوجد دليل عام يجمع كل الناس) -->
+  <div id="ownerPortalShell" class="container hidden">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <img src="./assets/logo.jpg" alt="حجوزاتك" style="width:42px; height:42px; border-radius:10px; object-fit:cover;" />
+        <div>
+          <strong style="font-size:1.15rem;">حجوزاتك — مولّد الصفحات المستقلة و QR Code</strong>
+          <div style="font-size:0.78rem; color:var(--text-muted);">كل صاحب خدمة يمتلك صفحة حجز مستقلة تماماً لعملائه عبر QR Code</div>
+        </div>
+      </div>
+      <button class="btn btn-outline" onclick="toggleTheme()">🌓 المظهر</button>
+    </div>
+
+    <!-- تسجيل دخول أو إنشاء حساب لصاحب خدمة -->
+    <div id="authSection" class="card" style="max-width:520px; margin:20px auto;">
+      <div class="mode-switch">
+        <button id="tabLogin" class="mode-btn active" onclick="switchAuthTab('login')">تسجيل الدخول</button>
+        <button id="tabSignup" class="mode-btn" onclick="switchAuthTab('signup')">إنشاء حساب صاحب خدمة</button>
+      </div>
+
+      <div id="loginFormBox">
+        <form onsubmit="handleOwnerLogin(event)">
+          <div class="form-group">
+            <label>البريد الإلكتروني</label>
+            <input type="email" id="loginEmail" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label>كلمة المرور</label>
+            <input type="password" id="loginPassword" class="form-control" required />
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; padding:11px;">دخول</button>
+        </form>
+      </div>
+
+      <div id="signupFormBox" class="hidden">
+        <form onsubmit="handleOwnerSignup(event)">
+          <div class="form-group">
+            <label>اسمك الكامل</label>
+            <input type="text" id="regFullName" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label>اسم النشاط أو الخدمة (سيظهر في صفحتك المستقلة)</label>
+            <input type="text" id="regBusinessName" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label>رابط صفحتك المستقلة (بالإنجليزية بدون مسافات مثل: omar-barber)</label>
+            <input type="text" id="regSlug" class="form-control" placeholder="omar-barber" required />
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label>التخصص / الحرفة</label>
+              <input type="text" id="regSpecialty" class="form-control" required />
+            </div>
+            <div class="form-group">
+              <label>المدينة</label>
+              <input type="text" id="regCity" class="form-control" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>رقم الواتساب</label>
+            <input type="tel" id="regPhone" class="form-control" required />
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label>البريد الإلكتروني</label>
+              <input type="email" id="regEmail" class="form-control" required />
+            </div>
+            <div class="form-group">
+              <label>كلمة المرور</label>
+              <input type="password" id="regPassword" class="form-control" minlength="6" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>نبذة قصيرة لعملائك</label>
+            <textarea id="regBio" class="form-control" rows="2"></textarea>
+          </div>
+          <button type="submit" class="btn btn-accent" style="width:100%; padding:11px;">إنشاء الحساب وتوليد QR Code</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- لوحة صاحب الخدمة -->
+    <div id="ownerDashSection" class="hidden">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h2>لوحة إدارة صفحتك المستقلة</h2>
+        <button class="btn btn-danger" onclick="handleSignOut()">تسجيل الخروج</button>
+      </div>
+      <div id="ownerWorkspace"></div>
+    </div>
+
+    <!-- لوحة الأدمن (ah10med2013@gmail.com) -->
+    <div id="adminDashSection" class="hidden">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h2>لوحة الأدمن الرئيسية</h2>
+        <button class="btn btn-danger" onclick="handleSignOut()">تسجيل الخروج</button>
+      </div>
+      <div class="card table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>صاحب الخدمة والنشاط</th>
+              <th>الرابط المستقل الخاص به</th>
+              <th>الحالة</th>
+              <th>إجراء</th>
+            </tr>
+          </thead>
+          <tbody id="adminTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- صفحة مستقلة معزولة بالكامل لعملاء صاحب الخدمة فقط (لا توجد أزرار خروج أو قوائم لغيره) -->
+  <div id="isolatedCustomerShell" class="container hidden">
+    <div id="isolatedPageContainer"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./js/supabase-config.js"></script>
+  <script src="./js/qr-generator.js"></script>
+  <script src="./js/app-strict.js"></script>
+</body>
+</html>
